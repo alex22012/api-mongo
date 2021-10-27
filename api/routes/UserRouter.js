@@ -2,11 +2,13 @@ const express = require("express")
 const UserHandler = require("../handlers/UserHandler")
 const mongoose = require("mongoose")
 const TaskHandler = require("../handlers/TaskHandler")
-const middleware = require("../middleawre")
+const authMiddleware = require("../middleware/authMiddleware")
+const jwtsecret = require("../service/jwtsecret")
+const jwt = require("jsonwebtoken")
 
 const userRouter = express.Router()
 
-userRouter.get("/users", async (req, res) => {
+userRouter.get("/users", authMiddleware, async (req, res) => {
     try {
         const resp = await UserHandler.getAllUsers()
         res.status(200).json(resp)
@@ -15,16 +17,21 @@ userRouter.get("/users", async (req, res) => {
     }
 })
 
-userRouter.post("/user", middleware, async (req, res) => {
+userRouter.post("/user", async (req, res) => {
     try {
         const resp = await UserHandler.postUser(req.body)
-        res.status(201).json(resp)
+        jwt.sign({email:resp.email}, jwtsecret, {expiresIn:"3h"}, (err, token) => {
+            if(err)
+                res.status(500).json("Erro no servidor")
+            else 
+                res.status(201).json({resp, token})
+        })
     } catch (error) {
         console.log(error)
     }
 })
 
-userRouter.get("/user/:id/task", async(req, res) => {
+userRouter.get("/user/:id/task", authMiddleware, async(req, res) => {
     try {
         let {id} = req.params
         if(!mongoose.isValidObjectId(id))
@@ -38,7 +45,7 @@ userRouter.get("/user/:id/task", async(req, res) => {
     }
 })
 
-userRouter.get("/user/:id", async (req, res) => {
+userRouter.get("/user/:id", authMiddleware, async (req, res) => {
     let {id} = req.params
     if(!mongoose.isValidObjectId(id))
         res.status(400).json("Id inválido")
@@ -52,7 +59,7 @@ userRouter.get("/user/:id", async (req, res) => {
     }
 })
 
-userRouter.put("/user/:id", async (req, res) => {
+userRouter.put("/user/:id", authMiddleware, async (req, res) => {
     let {id} = req.params
     let {avatar, password} = req.body
     if(!mongoose.isValidObjectId(id))
@@ -67,7 +74,7 @@ userRouter.put("/user/:id", async (req, res) => {
     }
 })
 
-userRouter.delete("/user/:id", async (req, res) => {
+userRouter.delete("/user/:id", authMiddleware, async (req, res) => {
     let {id} = req.params
     if(!mongoose.isValidObjectId(id))
         res.status(400).json('Id inválido')

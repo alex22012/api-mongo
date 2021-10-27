@@ -1,10 +1,11 @@
 const express = require("express")
 const mongoose = require("mongoose")
 const TaskHandler = require("../handlers/TaskHandler")
+const authMiddleware = require("../middleware/authMiddleware")
 
 const TaskRouter = express.Router()
 
-TaskRouter.post("/task", async(req, res) => {
+TaskRouter.post("/task", authMiddleware, async(req, res) => {
     try {
         const resp = await TaskHandler.postTask(req.body)
         res.status(201).json(resp)
@@ -13,7 +14,7 @@ TaskRouter.post("/task", async(req, res) => {
     }
 })
 
-TaskRouter.get("/task/:id", async(req, res) => {
+TaskRouter.get("/task/:id", authMiddleware, async(req, res) => {
     try {
         let {id} = req.params
         if(!mongoose.isValidObjectId(id))
@@ -27,7 +28,7 @@ TaskRouter.get("/task/:id", async(req, res) => {
     }
 })
 
-TaskRouter.put("/task/:id", async(req, res) => {
+TaskRouter.put("/task/:id", authMiddleware, async(req, res) => {
     try {
         let {id} = req.params
         if(!mongoose.isValidObjectId(id))
@@ -41,7 +42,7 @@ TaskRouter.put("/task/:id", async(req, res) => {
     }
 })
 
-TaskRouter.delete("/task/:id", async(req, res) => {
+TaskRouter.delete("/task/:id", authMiddleware, async(req, res) => {
     try {
         let {id} = req.params
         if(!mongoose.isValidObjectId(id))
